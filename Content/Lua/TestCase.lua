@@ -21,8 +21,8 @@ print(string.format("Value=%s", tostring(t.Value)))
 t.Value = 100
 print(string.format("Value=%s", tostring(t.Value)))
 print()
-local v = FVector(10,20,30)
-local v2 = FVector(1,2,3)
+local v = UE.FVector(10,20,30)
+local v2 = UE.FVector(1,2,3)
 local i = 100
 local i2 = 200
 local s = "haha"

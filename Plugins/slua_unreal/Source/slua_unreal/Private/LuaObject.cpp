@@ -276,12 +276,26 @@ namespace NS_SLUA {
 		lua_setfield(L, -2, "__newindex");
 	}
 
-	void LuaObject::newType(lua_State* L, const char* tn) {
-		lua_pushglobaltable(L);				    // _G
+	void LuaObject::newType(lua_State* L, const char* tn, const char* ns/* = nullptr*/) {
+		if (ns)
+		{
+			int t = lua_getglobal(L, ns);				// _G[ns]
+			if (t == 0)									// nil
+			{
+				lua_pop(L, 1);
+				lua_newtable(L);
+				lua_pushvalue(L, -1);
+				lua_setglobal(L, ns);
+			}
+		}
+		else
+		{
+			lua_pushglobaltable(L);				    // _G
+		}
 		lua_newtable(L);							// local t = {}
 		lua_pushvalue(L, -1);
-		lua_setfield(L, -3, tn);					// _G[tn] = t
-		lua_remove(L, -2);						// remove global table;
+		lua_setfield(L, -3, tn);					// _G[tn] = t or _G[ns][tn] = t
+		lua_remove(L, -2);						// remove _G or _G[ns];
 
         lua_newtable(L);
 		lua_pushvalue(L, -1);
@@ -292,8 +306,8 @@ namespace NS_SLUA {
 		setMetaMethods(L);
 	}
 
-    void LuaObject::newTypeWithBase(lua_State* L, const char* tn, std::initializer_list<const char*> bases) {
-		newType(L,tn);
+    void LuaObject::newTypeWithBase(lua_State* L, const char* tn, std::initializer_list<const char*> bases, const char* ns/* = nullptr*/) {
+		newType(L,tn, ns);
 
         // create base table
         lua_newtable(L);

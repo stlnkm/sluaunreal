@@ -1,13 +1,13 @@
 -- test cpp binding
-local f1=Foo(1024)
+local f1=Demo.Foo(1024)
 assert(f1.value==1024)
 f1.value=2048
 assert(f1.value==2048)
 local ee =f1:testEnum("hi",3)
 print("enum is " ..  type(ee) .. " " .. tostring(ee))
-local str=Foo.getStr()
+local str=Demo.Foo.getStr()
 -- f2 not collect
-local f2=Foo.getInstance()
+local f2=Demo.Foo.getInstance()
 f1:bar(str)
 f2:bar(str)
 -- call base function
@@ -19,7 +19,7 @@ f1:docall()
 -- test lambda 
 f1:helloWorld()
 
-local f3=FooChild(2048)
+local f3=Demo.FooChild(2048)
 assert(f3.value==2048)
 f3.value=1024
 assert(f3.value==1024)
@@ -42,7 +42,7 @@ f3:testArrMap(100,arr,map)
 local ret = f3:testArrMap2(200,arr,map)
 print(tostring(ret))
 
-local f=FooChild(0)
+local f=Demo.FooChild(0)
 assert(f.value==0)
 local arr = f:getTArray()
 for i=1,arr:Num() do
@@ -64,7 +64,7 @@ local boxptr = f:getBoxPtr()
 assert(boxptr:getCount()==1024)
 assert(boxptr:getCount()==1025)
 
-local http = FHttpModule.Get()
+local http = Demo.FHttpModule.Get()
 local req = http:CreateRequest()
 req:SetURL("http://www.baidu.com")
 req:SetVerb("get")

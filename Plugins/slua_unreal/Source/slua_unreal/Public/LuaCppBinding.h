@@ -390,45 +390,66 @@ namespace NS_SLUA {
             return SimpleString(#CLS); \
         } \
     
-    #define __DefLuaClassTail(CLS) \
-        static int Lua##CLS##_gc(lua_State* L) { \
+    #define __DefLuaClassTail(CLS,NS) \
+        static int Lua##NS##_##CLS##_gc(lua_State* L) { \
             UserData<CLS*>* UD = reinterpret_cast<UserData<CLS*>*>(lua_touserdata(L,1)); \
             if(UD->flag & UD_AUTOGC) delete UD->ud; \
             return 0;\
         } \
-        static int Lua##CLS##_tostring(lua_State* L) { \
+        static int Lua##NS##_##CLS##_tostring(lua_State* L) { \
             void* p = lua_touserdata(L,1); \
             char buf[128]; \
-            snprintf(buf,128,"%s(@%p)",#CLS,p); \
+            snprintf(buf,128,"%s.%s(@%p)",#NS,#CLS,p); \
             lua_pushstring(L,buf); \
             return 1; \
         } \
-        static int Lua##CLS##_setup(lua_State* L); \
-        static LuaClass Lua##CLS##__(Lua##CLS##_setup); \
-        int Lua##CLS##_setup(lua_State* L) { \
+        static int Lua##NS##_##CLS##_setup(lua_State* L); \
+        static LuaClass Lua##NS##_##CLS##__(Lua##NS##_##CLS##_setup); \
+        int Lua##NS##_##CLS##_setup(lua_State* L) { \
 			static_assert(!std::is_base_of<UObject, CLS>::value, "UObject class shouldn't use LuaCppBinding. Use REG_EXTENSION instead."); \
             AutoStack autoStack(L); \
 
-    #define DefLuaClassBase(CLS) \
+    #define DefLuaClassBaseWithNamespace(CLS,NS) \
         __DefTypeName(CLS) \
-        __DefLuaClassTail(CLS) \
+        __DefLuaClassTail(CLS,NS) \
+
+    #define DefLuaClassBase(CLS) \
+        DefLuaClassBaseWithNamespace(CLS,) \
+
+    #define DefLuaClassBaseExternWithNamespace(MODULE_API,CLS,NS) \
+        __DefTypeNameExtern(CLS,MODULE_API) \
+        __DefLuaClassTail(CLS,NS) \
 
     #define DefLuaClassBaseExtern(MODULE_API,CLS) \
-        __DefTypeNameExtern(CLS,MODULE_API) \
-        __DefLuaClassTail(CLS) \
+        DefLuaClassBaseExternWithNamespace(MODULE_API,CLS,) \
 
-    #define DefLuaClass(CLS, ...) \
-        DefLuaClassBase(CLS) \
-        LuaObject::newTypeWithBase(L,#CLS,std::initializer_list<const char*>{#__VA_ARGS__}); \
+    #define DefLuaClassWithNamespace(CLS,NS,...) \
+        DefLuaClassBaseWithNamespace(CLS,NS) \
+        if constexpr(sizeof(#NS) == 1) \
+            LuaObject::newTypeWithBase(L,#CLS,std::initializer_list<const char*>{#__VA_ARGS__}); \
+        else \
+            LuaObject::newTypeWithBase(L,#CLS,std::initializer_list<const char*>{#__VA_ARGS__},#NS); \
 
-    #define DefLuaClassExtern(MODULE_API,CLS, ...) \
-        DefLuaClassBaseExtern(MODULE_API,CLS) \
-        LuaObject::newTypeWithBase(L,#CLS,std::initializer_list<const char*>{#__VA_ARGS__}); \
+    #define DefLuaClass(CLS,...) \
+        DefLuaClassWithNamespace(CLS,,__VA_ARGS__) \
+
+    #define DefLuaClassExternWithNamespace(MODULE_API,CLS,NS,...) \
+        DefLuaClassBaseExternWithNamespace(MODULE_API,CLS,NS) \
+        if constexpr(sizeof(#NS) == 1) \
+            LuaObject::newTypeWithBase(L,#CLS,std::initializer_list<const char*>{#__VA_ARGS__}); \
+        else \
+            LuaObject::newTypeWithBase(L,#CLS,std::initializer_list<const char*>{#__VA_ARGS__},#NS); \
+
+    #define DefLuaClassExtern(MODULE_API,CLS,...) \
+        DefLuaClassExternWithNamespace(MODULE_API,CLS,,__VA_ARGS__) \
+
+    #define EndDefWithNamespace(CLS,M,NS)  \
+        lua_CFunction x=LuaCppBinding<decltype(M),M,2>::LuaCFunction; \
+        LuaObject::finishType(L, #CLS, x, Lua##NS##_##CLS##_gc, Lua##NS##_##CLS##_tostring); \
+        return 0; } \
 
     #define EndDef(CLS,M)  \
-        lua_CFunction x=LuaCppBinding<decltype(M),M,2>::LuaCFunction; \
-        LuaObject::finishType(L, #CLS, x, Lua##CLS##_gc, Lua##CLS##_tostring); \
-        return 0; } \
+        EndDefWithNamespace(CLS,M,) \
 
     #define DefLuaMethod(NAME,M) { \
         lua_CFunction x=LuaCppBinding<decltype(M),M>::LuaCFunction; \
@@ -475,19 +496,31 @@ namespace NS_SLUA {
         LuaObject::addGlobalMethod(L, #NAME, BindType::LuaCFunction); \
     }
 
-	#define DefEnum(NAME,...) \
-		static int LuaEnum##NAME##_setup(lua_State* L) { \
-			LuaObject::newEnum(L, #NAME, #__VA_ARGS__, std::initializer_list<int>{(int)__VA_ARGS__}); \
+	#define DefEnumWithNamespace(NAME,NS,...) \
+		static int LuaEnum##NS##_##NAME##_setup(lua_State* L) { \
+            if constexpr(sizeof(#NS) == 1) \
+                LuaObject::newEnum(L, #NAME, #__VA_ARGS__, std::initializer_list<int>{(int)__VA_ARGS__}); \
+            else \
+                LuaObject::newEnum(L, #NAME, #__VA_ARGS__, std::initializer_list<int>{(int)__VA_ARGS__}, #NS); \
 			return 0;\
 		} \
-		static LuaClass LuaEnum##NAME##__(LuaEnum##NAME##_setup); \
+		static LuaClass LuaEnum##NS##_##NAME##__(LuaEnum##NS##_##NAME##_setup); \
 
-	#define DefEnumClass(NAME,...) \
-		static int LuaEnum##NAME##_setup(lua_State* L) { \
-			LuaObject::newEnum(L, #NAME, #__VA_ARGS__, std::initializer_list<NAME>{__VA_ARGS__}); \
+    #define DefEnum(NAME,...) \
+        DefEnumWithNamespace(NAME,,__VA_ARGS__) \
+
+	#define DefEnumClassWithNamespace(NAME,NS,...) \
+		static int LuaEnum##NS##_##NAME##_setup(lua_State* L) { \
+            if constexpr(sizeof(#NS) == 1) \
+                LuaObject::newEnum(L, #NAME, #__VA_ARGS__, std::initializer_list<NAME>{__VA_ARGS__}); \
+            else \
+                LuaObject::newEnum(L, #NAME, #__VA_ARGS__, std::initializer_list<NAME>{__VA_ARGS__}, #NS); \
 			return 0;\
 		} \
-		static LuaClass LuaEnum##NAME##__(LuaEnum##NAME##_setup); \
+		static LuaClass LuaEnum##NS##_##NAME##__(LuaEnum##NS##_##NAME##_setup); \
+
+    #define DefEnumClass(NAME,...) \
+        DefEnumClassWithNamespace(NAME,,__VA_ARGS__)
 
     #define REG_EXTENSION_METHOD(U,N,M) { \
 		using BindType = LuaCppBinding<decltype(M),M>; \

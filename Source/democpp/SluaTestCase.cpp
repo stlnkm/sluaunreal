@@ -37,9 +37,9 @@ namespace NS_SLUA {
         }
     };
 
-    DefLuaClass(Base)
+    DefLuaClassWithNamespace(Base, Demo)
         DefLuaMethod(baseFunc1,&Base::baseFunc1)
-    EndDef(Base,&NoConstructor)
+    EndDefWithNamespace(Base,&NoConstructor,Demo)
 
     enum class Fruit {
         Apple=1,
@@ -117,7 +117,7 @@ namespace NS_SLUA {
         int value;
     };
 
-    DefLuaClass(Foo,Base)
+    DefLuaClassWithNamespace(Foo,Demo,Base)
 		DefLuaMethod(testEnum, &Foo::testEnum)
         DefLuaMethod(bar,&Foo::bar)
         DefLuaMethod(getStr,&Foo::getStr)
@@ -131,7 +131,7 @@ namespace NS_SLUA {
         DefLuaMethod_With_Lambda(helloWorld,false,[]()->void {
             NS_SLUA::Log::Log("Hello World from slua");
         })
-    EndDef(Foo,&Foo::create)
+    EndDefWithNamespace(Foo,&Foo::create,Demo)
 
 	class Box {
 	public:
@@ -149,9 +149,9 @@ namespace NS_SLUA {
 		int gi;
 	};
 
-	DefLuaClass(Box)
+	DefLuaClassWithNamespace(Box,Demo)
 		DefLuaMethod(getCount, &Box::getCount)
-	EndDef(Box,nullptr)
+	EndDefWithNamespace(Box,nullptr,Demo)
 
     class FooChild : public Foo {
 
@@ -235,7 +235,7 @@ namespace NS_SLUA {
         LuaVar event;
     };
 
-    DefLuaClass(FooChild,Foo)
+    DefLuaClassWithNamespace(FooChild,Demo,Foo)
         DefLuaMethod(fooChildFunc1,&FooChild::fooChildFunc1)
         DefLuaMethod(virtualFunc,&FooChild::virtualFunc)
         DefLuaMethod(setEventListener,&FooChild::setEventListener)
@@ -246,7 +246,7 @@ namespace NS_SLUA {
 		DefLuaMethod(getTMap, &FooChild::getTMap)
 		DefLuaMethod(getBoxPtr, &FooChild::getBoxPtr)
 		DefLuaMethod(hit, &FooChild::hit)
-    EndDef(FooChild,&FooChild::create)
+    EndDefWithNamespace(FooChild,&FooChild::create,Demo)
 
 
     class PerfTest {
@@ -271,34 +271,34 @@ namespace NS_SLUA {
         }
     };
 
-    DefLuaClass(PerfTest)
+    DefLuaClassWithNamespace(PerfTest,Demo)
         DefLuaMethod(EmptyFunc,&PerfTest::EmptyFunc)
         DefLuaMethod(ReturnInt,&PerfTest::ReturnInt)
         DefLuaMethod(ReturnIntWithInt,&PerfTest::ReturnIntWithInt)
         DefLuaMethod(FuncWithStr,&PerfTest::FuncWithStr)
-    EndDef(PerfTest,&PerfTest::create)
+    EndDefWithNamespace(PerfTest,&PerfTest::create,Demo)
 
 	enum TestEnum {
 		TE_OK,
 		TE_BAD,
 		TE_COUNT,
 	};
-	DefEnum(TestEnum, TE_OK, TE_BAD, TE_COUNT);
+	DefEnumWithNamespace(TestEnum, Demo, TE_OK, TE_BAD, TE_COUNT);
 
 	enum class TestEnum2 {
 		OK,
 		BAD,
 		COUNT,
 	};
-	DefEnumClass(TestEnum2, TestEnum2::OK, TestEnum2::BAD, TestEnum2::COUNT);
+	DefEnumClassWithNamespace(TestEnum2, Demo, TestEnum2::OK, TestEnum2::BAD, TestEnum2::COUNT);
 
 	// test http module 
 
-	DefLuaClass(IHttpResponse)
+	DefLuaClassWithNamespace(IHttpResponse,Demo)
 		DefLuaMethod(GetResponseCode, &IHttpResponse::GetResponseCode)
-	EndDef(IHttpResponse, nullptr)
+	EndDefWithNamespace(IHttpResponse, nullptr, Demo)
 
-	DefLuaClass(IHttpRequest)
+	DefLuaClassWithNamespace(IHttpRequest,Demo)
 		DefLuaMethod(GetResponse, &IHttpRequest::GetResponse)
 		DefLuaMethod(SetVerb, &IHttpRequest::SetVerb)
 		DefLuaMethod(ProcessRequest, &IHttpRequest::ProcessRequest)
@@ -309,16 +309,16 @@ namespace NS_SLUA {
 #if (ENGINE_MINOR_VERSION>=20) && (ENGINE_MAJOR_VERSION>=4)
 		DefLuaMethod(OnHeaderReceived, &IHttpRequest::OnHeaderReceived)
 #endif
-	EndDef(IHttpRequest, nullptr)
+	EndDefWithNamespace(IHttpRequest, nullptr,Demo)
 
-	DefLuaClass(FHttpModule)
+	DefLuaClassWithNamespace(FHttpModule,Demo)
 		DefLuaMethod_With_Lambda(Get, true, []()->FHttpModule* {
 		return &FHttpModule::Get();
 		})
 		DefLuaMethod(CreateRequest, &FHttpModule::CreateRequest)
 		DefLuaMethod(GetHttpTimeout, &FHttpModule::GetHttpTimeout)
 
-	EndDef(FHttpModule,nullptr)
+	EndDefWithNamespace(FHttpModule,nullptr,Demo)
 }
 
 UTestObject::UTestObject(const FObjectInitializer& ObjectInitializer)

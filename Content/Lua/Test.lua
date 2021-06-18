@@ -13,8 +13,8 @@ function begin(uworld,uactor)
     local t=Test();
     testobj = t
     weakptr = testobj.weakptr
-    local v = FVector(10,20,30)
-    local v2 = FVector(1,2,3)
+    local v = UE.FVector(10,20,30)
+    local v2 = UE.FVector(1,2,3)
     local i = 100
     local i2 = 200
     local s = "haha"
@@ -25,8 +25,8 @@ function begin(uworld,uactor)
         print("eeee",k,v)
     end
   
-    assert(TestEnum.TE_COUNT==2)
-    assert(TestEnum2.COUNT==2)
+    assert(Demo.TestEnum.TE_COUNT==2)
+    assert(Demo.TestEnum2.COUNT==2)
 
     -- set from c++
     print(some,some.field)

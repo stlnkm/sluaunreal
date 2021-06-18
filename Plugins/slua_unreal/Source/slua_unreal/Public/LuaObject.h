@@ -328,8 +328,8 @@ namespace NS_SLUA {
 		static int classIndex(lua_State* L);
 		static int classNewindex(lua_State* L);
 
-		static void newType(lua_State* L, const char* tn);
-        static void newTypeWithBase(lua_State* L, const char* tn, std::initializer_list<const char*> bases);
+		static void newType(lua_State* L, const char* tn, const char* ns = nullptr);
+        static void newTypeWithBase(lua_State* L, const char* tn, std::initializer_list<const char*> bases, const char* ns = nullptr);
 		static void addMethod(lua_State* L, const char* name, lua_CFunction func, bool isInstance = true);
 		static void addGlobalMethod(lua_State* L, const char* name, lua_CFunction func);
 		static void addField(lua_State* L, const char* name, lua_CFunction getter, lua_CFunction setter, bool isInstance = true);
@@ -346,14 +346,14 @@ namespace NS_SLUA {
 		static void callUFunction(lua_State* L, UObject* obj, UFunction* func, uint8* params);
 		// create new enum type to lua, see DefEnum macro
 		template<class T>
-		static void newEnum(lua_State* L, const char* tn, const char* keys, std::initializer_list<T> values) {
+		static void newEnum(lua_State* L, const char* tn, const char* keys, std::initializer_list<T> values, const char* ns = nullptr) {
 			FString fkey(keys);
 			// remove namespace prefix
 			fkey.ReplaceInline(*FString::Format(TEXT("{0}::"), { UTF8_TO_TCHAR(tn) }), TEXT(""));
 			// remove space
 			fkey.ReplaceInline(TEXT(" "),TEXT(""));
 			// create enum table
-			createTable(L, tn);
+			createTable(L, ns ? TCHAR_TO_UTF8(*FString::Format(TEXT("{0}.{1}"), {UTF8_TO_TCHAR(ns), UTF8_TO_TCHAR(tn)})) : tn);
 
 			FString key, right;
 			for (size_t i = 0; i < values.size() && strSplit(fkey, ",", &key, &right); ++i) {
